@@ -1,0 +1,8 @@
+databaseChangeLog:
+  # tables
+  - include:
+      file: "db/changelog/tables/articles/create-table-articles.sql" 
+        
+  # constraints
+  - include:
+      file: "db/changelog/tables/articles/add-constraints-table-articles.sql"

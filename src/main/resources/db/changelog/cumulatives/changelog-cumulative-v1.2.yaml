@@ -1,0 +1,4 @@
+databaseChangeLog:        
+  # data
+  - include:
+      file: "db/changelog/data/insert_data_into_roles.sql"

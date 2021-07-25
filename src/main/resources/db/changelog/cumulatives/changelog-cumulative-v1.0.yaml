@@ -1,0 +1,10 @@
+databaseChangeLog:
+  # tables
+  - include:
+      file: "db/changelog/tables/users/create-table-users.sql" 
+  - include:
+      file: "db/changelog/tables/roles/create-table-roles.sql"      
+
+  # constraints
+  - include:
+      file: "db/changelog/tables/users/add-constraints-table-users.sql"
