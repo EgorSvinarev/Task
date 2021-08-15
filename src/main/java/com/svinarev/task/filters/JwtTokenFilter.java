@@ -30,11 +30,11 @@ import com.svinarev.task.entities.User;
 public class JwtTokenFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final AuthenticationManager authenticationManager;
-	private String secretKey;
+	private final Algorithm jwtAlgorithm;
 	
-	public JwtTokenFilter(AuthenticationManager authenticationManager, String secretKey) {
+	public JwtTokenFilter(AuthenticationManager authenticationManager, Algorithm algo) {
 		this.authenticationManager = authenticationManager;
-		this.secretKey = secretKey;
+		this.jwtAlgorithm = algo;
 	}
 	
 	@Autowired
@@ -61,20 +61,19 @@ public class JwtTokenFilter extends UsernamePasswordAuthenticationFilter {
 											Authentication authResult) throws IOException, ServletException {
 		
 		User user = (User) authResult.getPrincipal();
-		Algorithm algo = Algorithm.HMAC256(secretKey.getBytes()); 
 		
 		String accessToken = JWT.create()
 				.withSubject(user.getUsername())
 				.withExpiresAt(new Date(System.currentTimeMillis() + 10 * 60 * 1000))
 				.withIssuer(request.getRequestURL().toString())
 				.withClaim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
-				.sign(algo);
+				.sign(jwtAlgorithm);
 		
 		String refreshToken = JWT.create()
 				.withSubject(user.getUsername())
 				.withExpiresAt(new Date(System.currentTimeMillis() + 30 * 60 * 1000))
 				.withIssuer(request.getRequestURL().toString())
-				.sign(algo);
+				.sign(jwtAlgorithm);
 
 		Map<String, String> tokens = new HashMap<>();
 		tokens.put("access_token", accessToken);

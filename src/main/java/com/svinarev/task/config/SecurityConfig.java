@@ -11,10 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+
+import com.auth0.jwt.algorithms.Algorithm;
 
 import com.svinarev.task.services.UserService;
 import com.svinarev.task.filters.JwtTokenFilter;
+import com.svinarev.task.filters.CustomAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,7 +33,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	private String jwtSecretKey;
 	
 	@Bean
-	public BCryptPasswordEncoder getEncoder() {
+	public Algorithm getJWTAlgorithm() {
+		return Algorithm.HMAC256(jwtSecretKey.getBytes());  
+	}
+	
+	@Bean
+	public BCryptPasswordEncoder getEncoder() { 
 		return new BCryptPasswordEncoder();
 	}
 	
@@ -49,7 +59,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/statistics/**").hasAnyAuthority("ADMIN")
 			.anyRequest().authenticated()
 		.and()
-			.addFilter(new JwtTokenFilter(authenticationManagerBean(), jwtSecretKey));
+			.addFilter(new JwtTokenFilter(authenticationManagerBean(), getJWTAlgorithm()))
+			.addFilterBefore(new CustomAuthenticationFilter(getJWTAlgorithm()), JwtTokenFilter.class);
 	}
 	
 	@Override
