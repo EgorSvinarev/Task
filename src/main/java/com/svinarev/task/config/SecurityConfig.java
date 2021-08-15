@@ -8,32 +8,48 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.beans.factory.annotation.Value;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import com.svinarev.task.services.UserService;
+import com.svinarev.task.filters.JwtTokenFilter;
 
 @Configuration
 @EnableWebSecurity
+@PropertySource("classpath:/application.properties")
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	private UserService userDetailService;
+	
+	@Value("${task.jwt.secret}")
+	private String jwtSecretKey;
 	
 	@Bean
 	public BCryptPasswordEncoder getEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 	
+	@Bean
+	@Override
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManagerBean();
+	}
+	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable()
+			.sessionManagement().sessionCreationPolicy(STATELESS)
+		.and()
 			.authorizeRequests()
-				.antMatchers("/user/save/**").permitAll()
 				.antMatchers("/user/**").hasAnyAuthority("USER", "ADMIN")
 				.antMatchers("/article/**").hasAnyAuthority("USER", "ADMIN")
 				.antMatchers("/statistics/**").hasAnyAuthority("ADMIN")
 			.anyRequest().authenticated()
 		.and()
-			.httpBasic();
+			.addFilter(new JwtTokenFilter(authenticationManagerBean(), jwtSecretKey));
 	}
 	
 	@Override
